@@ -22,7 +22,7 @@ class SmartBusDriverApplication : Application() {
     private fun setupDi() {
         startKoin {
             androidLogger()
-            //androidContext(this@SmartBusPassengerApplication)
+            androidContext(this@SmartBusDriverApplication)
             modules(networkModule, dataModule, presentationModule)
         }
     }

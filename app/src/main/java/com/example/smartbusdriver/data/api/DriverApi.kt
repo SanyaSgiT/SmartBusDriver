@@ -5,6 +5,7 @@ import com.example.smartbusdriver.data.service.CreateUserRequest
 import com.example.smartbusdriver.data.service.LinkToRouteRequest
 import com.example.smartbusdriver.data.service.LoginRequest
 import com.example.smartbusdriver.domain.Driver
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -21,5 +22,5 @@ interface DriverApi {
     suspend fun createUser(@Body createUserRequest: CreateUserRequest): DriverAuthResponse
 
     @POST("/driver/route")
-    suspend fun linkToRoute(@Body linkToRouteRequest: LinkToRouteRequest)
+    suspend fun linkToRoute(@Body linkToRouteRequest: LinkToRouteRequest): Response<Unit>
 }

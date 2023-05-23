@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smartbusdriver.MapActivity
 import com.example.smartbusdriver.R
@@ -24,6 +25,7 @@ import com.example.smartbusdriver.ui.routeList.RouteListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 //import com.yandex.mapkit.geometry.Point
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -50,15 +52,21 @@ class RouteActivity : AppCompatActivity() {
         btn = findViewById(R.id.button)
 
         btn.setOnClickListener {
-//            CoroutineScope(Dispatchers.IO).launch {
-//                val route = driverApi.linkToRoute(
-//                    LinkToRouteRequest(
-//                        routeId.id
-//                    )
-//                )
-//                println(routeId.id)
-//            }
-            startActivity(Intent(this, MapActivity::class.java))
+            lifecycleScope.launch {
+                driverApi.linkToRoute(
+                    LinkToRouteRequest(
+                        routeId.id
+                    )
+                )
+                println(routeId.id)
+
+                withContext(Dispatchers.Main) {
+                    val intent = Intent(this@RouteActivity, MapActivity::class.java)
+                        .putExtra("RouteId", routeId.id)
+
+                    startActivity(intent)
+                }
+            }
         }
         setupBindings()
         setupUi()
@@ -87,7 +95,9 @@ class RouteActivity : AppCompatActivity() {
         }
         searchEditText.addTextChangedListener {
             it?.let {
-                vm.search(Integer.parseInt(it.toString()))
+                it.toString().toIntOrNull()?.let { int ->
+                    vm.search(int)
+                }
             }
         }
         setupRecycler()
@@ -141,17 +151,17 @@ class RouteActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
-    private fun newTransportType(type: TransportType): String{
+    private fun newTransportType(type: TransportType): String {
         var tType = ""
-        if (type == TransportType.BUS){
+        if (type == TransportType.BUS) {
             tType = "Автобус"
-        }else if(type == TransportType.TROLLEY_BUS){
+        } else if (type == TransportType.TROLLEY_BUS) {
             tType = "Троллейбус"
-        }else if(type == TransportType.Minibus){
+        } else if (type == TransportType.Minibus) {
             tType = "Маршрутка"
-        }else if(type == TransportType.TRAM){
+        } else if (type == TransportType.TRAM) {
             tType = "Трамвай"
-        }else if(type == TransportType.MINIBUS){
+        } else if (type == TransportType.MINIBUS) {
             tType = "Маршрутка"
         }
         return tType

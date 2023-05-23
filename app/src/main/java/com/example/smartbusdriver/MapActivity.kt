@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -50,7 +51,7 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
     private var levelText: TextView? = null
     private var levelIcon: ImageButton? = null
     private var trafficLevel: TrafficLevel? = null
-    private var trafficFreshness: MapActivity.TrafficFreshness? = null
+    private var trafficFreshness: TrafficFreshness? = null
     private var traffic: TrafficLayer? = null
 
     private val routeActivity = RouteActivity()
@@ -75,6 +76,13 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
     private var userLocationLayer: UserLocationLayer? = null
     private lateinit var mapObjects: MapObjectCollection
 
+    private val routeId: Int by lazy {
+        intent.extras?.getInt("RouteId", -10).let {
+            if (it == null || it == -1) error("RouteId must be supplied via extras")
+            else it
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
@@ -87,7 +95,7 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
 
         levelText = findViewById<TextView>(R.id.traffic_light_text)
         levelIcon = findViewById<ImageButton>(R.id.traffic_light)
-        traffic = MapKitFactory.getInstance().createTrafficLayer(mapview!!.getMapWindow())
+        traffic = MapKitFactory.getInstance().createTrafficLayer(mapview!!.mapWindow)
         traffic!!.isTrafficVisible = true
         traffic!!.addTrafficListener(this)
         updateLevel()
@@ -126,9 +134,9 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
         var level: String? = ""
         if (!traffic!!.isTrafficVisible) {
             iconId = R.drawable.rec_grey
-        } else if (trafficFreshness == MapActivity.TrafficFreshness.Loading) {
+        } else if (trafficFreshness == TrafficFreshness.Loading) {
             iconId = R.drawable.rec_violet
-        } else if (trafficFreshness == MapActivity.TrafficFreshness.Expired) {
+        } else if (trafficFreshness == TrafficFreshness.Expired) {
             iconId = R.drawable.rec_blue
         } else if (trafficLevel == null) {  // state is fresh but region has no data
             iconId = R.drawable.rec_grey
@@ -139,7 +147,7 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
                 TrafficColor.YELLOW -> iconId = R.drawable.rec_yellow
                 else -> iconId = R.drawable.rec_grey
             }
-            level = Integer.toString(trafficLevel!!.level)
+            level = trafficLevel!!.level.toString()
         }
         levelIcon!!.setImageBitmap(BitmapFactory.decodeResource(resources, iconId))
         levelText!!.text = level
@@ -156,19 +164,19 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
 
     override fun onTrafficChanged(trafficLevel: TrafficLevel?) {
         this.trafficLevel = trafficLevel
-        trafficFreshness = MapActivity.TrafficFreshness.OK
+        trafficFreshness = TrafficFreshness.OK
         updateLevel()
     }
 
     override fun onTrafficLoading() {
         trafficLevel = null
-        trafficFreshness = MapActivity.TrafficFreshness.Loading
+        trafficFreshness = TrafficFreshness.Loading
         updateLevel()
     }
 
     override fun onTrafficExpired() {
         trafficLevel = null
-        trafficFreshness = MapActivity.TrafficFreshness.Expired
+        trafficFreshness = TrafficFreshness.Expired
         updateLevel()
     }
 

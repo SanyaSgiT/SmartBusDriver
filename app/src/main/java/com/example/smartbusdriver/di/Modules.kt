@@ -1,13 +1,14 @@
 package com.example.smartbusdriver.di
 
 import android.content.Context
-import com.example.smartbusdriver.data.api.TransportApi
 import com.example.smartbusdriver.data.api.DriverApi
+import com.example.smartbusdriver.data.api.TransportApi
 import com.example.smartbusdriver.data.repository.RoutesRepository
 import com.example.smartbusdriver.data.storage.UserStorage
 import com.example.smartbusdriver.ui.routeList.RouteListViewModel
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -33,6 +34,15 @@ val networkModule = module {
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
+            .addInterceptor(
+                Interceptor { chain ->
+                    val token = get<UserStorage>().token ?: return@Interceptor chain.proceed(chain.request())
+
+                    val builder = chain.request().newBuilder()
+                    builder.header("Authorization", "Bearer $token")
+                    return@Interceptor chain.proceed(builder.build())
+                }
+            )
             .build()
 
         Retrofit.Builder()
