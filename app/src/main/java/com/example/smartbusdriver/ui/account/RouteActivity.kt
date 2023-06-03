@@ -40,7 +40,7 @@ class RouteActivity : AppCompatActivity() {
     private lateinit var textRoute: TextView
     private val vm: RouteListViewModel by viewModel()
     private lateinit var adapter: RouteAdapter
-    var routeNum: String = ""
+    var routeItem: String = ""
     var itemRoute: String = ""
 
     private val driverApi: DriverApi by inject()
@@ -63,6 +63,7 @@ class RouteActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     val intent = Intent(this@RouteActivity, MapActivity::class.java)
                         .putExtra("RouteId", routeId.id)
+                        .putExtra("RouteItem", routeItem)
 
                     startActivity(intent)
                 }
@@ -111,7 +112,6 @@ class RouteActivity : AppCompatActivity() {
         vm.traces.observe(this) { traces ->
             traces?.let {
 //                drawTrace(it)
-//                mapActivity.drawTrace(it)
             }
         }
     }
@@ -140,13 +140,14 @@ class RouteActivity : AppCompatActivity() {
             val tType: String = newTransportType(it.transportType)
             itemRoute = itemRoute + tType + " " + it.name + "(" + it.firstStop.name + " - " + it.lastStop.name + ")"
 
+            routeItem = routeItem + tType + " " + it.name
+
             textRoute.text = itemRoute
             recyclerGetter.setImageBitmap(BitmapFactory.decodeResource(resources, R.drawable.arrow_up))
             recyclerView.isVisible = false
 
             routeId = it
             vm.drawRoute(it.id)
-            routeNum = it.route
         }
         recyclerView.adapter = adapter
     }

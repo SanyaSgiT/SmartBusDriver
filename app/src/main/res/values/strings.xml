@@ -36,4 +36,7 @@
     <string name="way_edit">Изменение маршрута</string>
     <string name="route">Выберите маршрут движения из списка</string>
     <string name="parameter">При необходимости Вы можете изменить этот параметр в настройках пользователя</string>
+    <string name="notification">Уведомление об оплате</string>
+    <string name="ok">Принято</string>
+    <string name="paying">Поступил платежь 60р.</string>
 </resources>

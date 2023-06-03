@@ -41,7 +41,6 @@ class RouteListViewModel(
         viewModelScope.launch {
             val traces = routesRepository.getTrace(id)
             println(traces)
-            println("Я заебалась понимать как это работает")
             _traces.value = traces
 //            tracePoints = traces
         }

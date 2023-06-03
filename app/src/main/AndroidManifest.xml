@@ -50,6 +50,9 @@
         <activity
             android:name=".ui.account.RouteActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.DialogActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

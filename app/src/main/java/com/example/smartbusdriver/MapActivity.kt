@@ -14,9 +14,11 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.smartbusdriver.data.api.TransportApi
 import com.example.smartbusdriver.data.repository.RoutesRepository
 import com.example.smartbusdriver.domain.Trace
 import com.example.smartbusdriver.ui.bottombar.InfoActivity
@@ -44,6 +46,7 @@ import com.example.smartbusdriver.ui.account.RouteActivity
 import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.map.MapObjectCollection
 import com.yandex.mapkit.map.PolylineMapObject
+import org.koin.android.ext.android.inject
 
 class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectListener {
 
@@ -76,9 +79,18 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
     private var userLocationLayer: UserLocationLayer? = null
     private lateinit var mapObjects: MapObjectCollection
 
+    private val transportApi: TransportApi by inject()
+
     private val routeId: Int by lazy {
         intent.extras?.getInt("RouteId", -10).let {
             if (it == null || it == -1) error("RouteId must be supplied via extras")
+            else it
+        }
+    }
+
+    private val routeItem: String by lazy {
+        intent.extras?.getString("RouteItem", "-10").let {
+            if (it == null || it == "") error("RouteItem must be supplied via extras")
             else it
         }
     }
@@ -196,6 +208,15 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
                     true
                 }
                 R.id.menu_info -> {
+                    for(i in points.indices){
+                        print("Point(")
+                        print(points[i].latitude)
+                        print(", ")
+                        print(points[i].longitude)
+                        print(")")
+                        println("")
+                    }
+                    println(points)
                     startActivity(Intent(this, InfoActivity::class.java))
                     finish()
                     true
@@ -203,25 +224,46 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
                 else -> false
             }
         }
-
-//        pointsToDraw = routeActivity.tracesToDraw
-//        println(pointsToDraw)
-//        println("Отработал pointsToDraw")
-
-        route.text = routeActivity.itemRoute
-        println(routeActivity.itemRoute)
+        route.text = routeItem
+        println(routeItem)
         passengers!!.text = "0 пассажиров оплатили онлайн"
 
-//        drawTrace(pointsToDraw)
+        vm.drawRoute(routeId)
+        println("Отработал vm.drawRoute(routeId)")
+        vm.traces.observe(this) { traces ->
+            traces?.let {
+                drawTrace(it)
+                println(routeId)
+                println(it)
+                println("Отработал drawTrace(traces)")
+            }
+        }
+
+//        startActivity(Intent(this, DialogActivity::class.java))
+//        setupDialog()
     }
 
+    private fun setupDialog(){
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Уведомление об оплате")
+        builder.setMessage("На счет поступил платеж 60р.")
+
+        builder.setPositiveButton("Принято") { dialog, which ->
+            Toast.makeText(
+                applicationContext,
+                "Принято", Toast.LENGTH_SHORT
+            ).show()
+
+        }
+        builder.show()
+    }
     private fun setupSubscriptions() {
 //        vm.routes.observe(this) { list ->
 //            adapter.updateList(list)
 //        }
     }
 
-    fun drawTrace(traces: List<Trace>) {
+    private fun drawTrace(traces: List<Trace>) {
 
         mapObjects.clear()
 
@@ -297,9 +339,12 @@ class MapActivity : AppCompatActivity(), TrafficListener, UserLocationObjectList
         locationManager!!.removeUpdates(locationListener)
     }
 
+    var points: List<Point> = listOf(Point(0.0,0.0))
+
     private val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             showLocation(location)
+            points = points + Point(location.latitude, location.longitude)
             println(tvLocationGPS)
         }
 
